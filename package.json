@@ -1,21 +1,21 @@
 {
-  "name": "js",
+  "name": "game",
   "version": "1.0.0",
-  "description": "js",
-  "main": "a.js",
+  "description": "game",
+  "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server --inline"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zou12e/js.git"
+    "url": "git+https://github.com/zou12e/game.git"
   },
   "author": "jeff",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/zou12e/js/issues"
+    "url": "https://github.com/zou12e/game/issues"
   },
-  "homepage": "https://github.com/zou12e/js#readme",
+  "homepage": "https://github.com/zou12e/game#readme",
   "dependencies": {
   },
   "devDependencies": {

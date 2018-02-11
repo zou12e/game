@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>打飞机</title>
+    <script type="text/javascript" src="index.js" ></script>
+    <style type="text/css">
+		/*CSS Reset*/
+		body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td,header,hgroup,nav,section,article,aside,footer,figure,figcaption,menu,button{margin:0;padding:0}body{font-family:"Helvetica Neue",Helvetica,STHeiTi,sans-serif;line-height:1.5;font-size:16px;color:#666;background-color:#f0eff5;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;outline:0;word-wrap:break-word;word-break:break-all;-webkit-touch-callout:none;touch-callout:none}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}table{border-collapse:collapse;border-spacing:0}caption,th{text-align:left}fieldset,img{border:0;max-width:100%}li{list-style:none}ins{text-decoration:none}del{text-decoration:line-through}input,button,textarea,select,optgroup,option{font-family:inherit;font-size:inherit;font-style:inherit;font-weight:inherit;outline:0;-webkit-appearance:none}button{-webkit-appearance:none;border:0;background:0}a{-webkit-touch-callout:none;text-decoration:none;cursor:pointer}a:active{background-color:#e5e6e7}:focus{outline:0;-webkit-tap-highlight-color:transparent}em,i{font-style:normal}
+    </style>
+
+
+    <style type="text/css">
+	   
+		.screen {
+			position: absolute;
+			display: flex;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 1;
+			margin: auto;
+			width: 375px;
+			height: 667px;
+
+		}
+		.screen_dialog {
+			z-index: 99;
+			background: #ddd;
+		}
+    	.screen .aisle {
+    		position: relative;
+			width: 100%;
+			flex-flow: 1;
+			background: #000;
+			overflow: hidden;
+    	}
+    	.screen .aisle:last-child {
+    		border-right: none;
+    	}
+
+    	.screen .aisle span {
+
+    		position: absolute;
+    		left: 50%;
+			bottom: 30px;
+			width: 4px;
+			height: 8px;
+			margin-left: -2px;
+			background: #ddd;
+    		z-index: 3;
+    	}
+
+    	.screen .aisle i {
+
+    		position: absolute;
+    		left: 50%;
+			top: 0;
+			width: 16px;
+			height: 16px;
+			margin-left: -8px;
+			background: #ddd;
+			border-radius: 50%;
+    		z-index: 3;
+    		animation: monster 0s linear;
+    		
+
+    	}
+		@keyframes monster {
+			from { top: 0;}
+			to  { top: 100%;}
+		}
+
+    	.plane {
+    		position: absolute;
+    		width: 20px;
+    		height: 20px;
+    		background: #fff;
+    		z-index:2;
+    		bottom: 2px;
+
+    	}
+
+
+    	.screen h3 {
+    		position: absolute;
+    		right: 20px;
+    		top: 10px;
+    		font-size: 36px;
+    		line-height: 36px;
+    		font-weight: bold;
+    		color: #fff;
+    		z-index: 1;
+
+    	}
+
+    	.screen h3:before {
+    		content: '得分：';
+    		font-size: 12px;
+    	}
+
+		 
+		.button {
+
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 5;
+			margin: auto;
+
+			width: 120px;
+		 	height: 40px;
+		 	line-height: 40px;
+		 	border-radius: 2px;
+		 	color: #fff;
+			cursor: pointer;
+			font-size: 16px;
+		 	background: #444;
+			
+		}
+		.hide {
+
+			display: none;
+		}
+
+    </style>
+</head>
+<body>
+	
+	<section>
+		
+		<div id='Screen' class="screen">
+			<div class="aisle"></div>
+			<div class="aisle"></div>
+			<div class="aisle"></div>
+			<div class="aisle"></div>
+			<div class="aisle"></div>
+
+			<div class="aisle"></div>
+			<div class="aisle"></div>
+			<div class="aisle"></div>
+			<div class="aisle"></div>
+			<div class="aisle"></div>
+
+			<h2 id='Plane' class="plane"></h2>
+
+			<h3 id='Point' class='point' >
+				0
+			</h3>
+
+		</div>
+
+		
+		<button class='button' >
+			开始游戏
+		</button>
+
+		<div  class="screen screen_dialog hide"></div>
+	</section>
+
+	<script type="text/javascript">
+
+		//获取元素样式内容
+		Element.prototype.styleValue = function (prop){
+			var val = "";
+			if(this.currentStyle) {
+				val =  this.currentStyle[prop];
+			} else {
+				val =  window.getComputedStyle(this,null)[prop];
+			}
+			return parseFloat(val);
+		}
+
+
+		function $(id){
+			return document.getElementById(id);
+		}
+		
+
+		function Plane(){
+
+			var _self = this;
+
+			var obj = {
+				aisle_size : 10,                       //航道
+				plane_index : 0,                       //飞机位置
+				plane_dom :　$("Plane"),               //飞机dom
+				plane_dom_left : 0,                    //飞机离航道距离
+				plane_width : 0,                       //飞机宽
+				plane_height : 0,                      //飞机高 
+				screen_dom : $("Screen"),              //屏 dom
+				screen_aisle_dom : [],                 //弹道
+				screen_width : 0,                      //屏高
+				screen_height : 0,                     //屏宽
+				speed : 500,                           //子弹速度
+				monster_time : 15000,                  //怪兽速度
+				monster_height: 0 ,                    //怪兽高度
+				point: 0 ,                             //积分
+				point_dom: $("Point"),                  //积分DOM 
+				identi: "hide"                         //击毁标识
+			}
+			
+			
+			_self.init = function() {
+
+				obj.screen_aisle_dom = obj.screen_dom.getElementsByTagName("div");
+				obj.screen_width = obj.screen_dom.styleValue("width");
+				obj.screen_height = obj.screen_dom.styleValue("height");
+				initPlane();
+				
+			}
+
+			_self.start = function() {
+				initPlaneEvent();
+				initMonster();
+			}
+
+			_self.relPlay = function() {
+				
+				location.reload()
+
+			}
+
+			//加载飞机位置
+			function initPlane() {
+				obj.plane_width = obj.plane_dom.styleValue("width");
+				obj.plane_height = obj.plane_dom.styleValue("height");
+				var aisle_w = obj.screen_width / obj.aisle_size
+				if(aisle_w > obj.plane_width) {
+					obj.plane_dom_left = (aisle_w - obj.plane_width) / 2;
+				} else {
+					obj.plane_width =  aisle_w - 4 ;
+					obj.plane_dom.style.width = obj.plane_width + "px";
+					obj.plane_dom_left = 2 ;
+				}
+				obj.plane_dom.style.left = obj.plane_dom_left +  "px"
+			}
+
+			//加载飞机事件
+			function initPlaneEvent() {
+
+				//pc键盘左右事件
+				document.addEventListener("keydown", function(e){
+					if(e.keyCode ==37 || e.keyCode ==39) {
+						obj.plane_index += e.keyCode - 38;
+						setPlaneLeft();
+					}
+				});
+
+				obj.screen_dom.addEventListener("touchend", function(e){
+					
+					var touch = e.changedTouches[0];
+					obj.plane_index += (obj.plane_dom.styleValue("left") - touch.pageX) > 0 ? -1 : 1 ;
+					// obj.plane_index += (obj.screen_width/2 - touch.pageX) > 0 ? -1 : 1 ;
+					setPlaneLeft();
+				})
+
+				//子弹
+				var bullet = {}; 		
+				setInterval(function(){
+					bullet = createBullet();;
+					obj.screen_aisle_dom[obj.plane_index].appendChild(bullet);
+					bulletMove(bullet,obj.plane_index);
+				}, obj.speed);
+			}
+
+
+			//设置飞机位置
+			function setPlaneLeft() {
+				if(obj.plane_index < 0) {
+					obj.plane_index = 0;
+				}else if(obj.plane_index >= obj.aisle_size) {
+					obj.plane_index = obj.aisle_size - 1;
+				}
+				obj.plane_dom.style.left = parseInt(obj.plane_dom_left) + 
+					obj.plane_index * (obj.screen_width / obj.aisle_size) + "px";
+
+			}
+
+			//创建子弹
+			function createBullet() {
+				return document.createElement("span");
+			}
+
+
+			//加载子弹动画
+			function bulletMove(bullet,index){
+				var timer = 0;
+				timer = setInterval(function(){
+					bullet.style.bottom =  bullet.styleValue("bottom") + 1 + "px";
+					shooting(timer,bullet,index);
+				},10);
+
+			}
+
+
+			//算子弹打到怪兽
+			function shooting(timer,bullet,index){
+				var monster = getFirstMonster(index);
+				if(bullet && monster) {
+					//子弹打到怪兽
+					if(bullet.styleValue("bottom") + monster.styleValue("top") +obj.monster_height   >= obj.screen_height){
+						bullet.remove();//移除子弹
+						monster.className = obj.identi;//标记怪兽已消灭
+						clearInterval(timer);
+						setPoint();
+					}
+				}else if(bullet){//子弹超出屏幕
+					if(bullet.styleValue("bottom") > obj.screen_height ){
+						clearInterval(timer);
+						if(bullet)
+							bullet.remove();
+					}
+				}
+			}
+
+			//设置分数
+			function setPoint() {
+				obj.point++ ;
+				obj.point_dom.innerHTML  = obj.point;
+
+			}
+
+			//获得第一个没有消灭的怪兽
+			function getFirstMonster(index) {
+				var monster = null ,
+					doms = obj.screen_aisle_dom[index].getElementsByTagName("i"),
+					len = doms.length; 
+				for(var i = 0 ; i < len; i++){
+					if(doms[i].className != obj.identi){
+						monster = doms[i];
+						break;
+					}
+				}
+				return monster;
+			}
+
+			//加载怪兽
+			function initMonster() {
+				var random = 0 , monster = {} , timer , i = 0;
+				timer = setInterval(function(){
+					random = parseInt(Math.random() * obj.aisle_size)
+					monster = createMonster();
+					obj.screen_aisle_dom[random].appendChild(monster);
+					if(!obj.monster_height){
+						obj.monster_height = monster.styleValue("height");
+					}	
+					removeMonster(monster,i);
+				    i ++ ;  
+				}, obj.speed);
+			}
+
+
+			//检验怪兽是否被消灭
+			function removeMonster(monster,index) {
+				setTimeout(function(){
+					if(monster) {
+						//游戏结束 
+						if(monster.className!=obj.identi){
+							document.querySelector(".screen_dialog").className  = "screen screen_dialog";
+							alert("游戏结束\n恭喜您获得"+obj.point +"分！");
+							_self.relPlay();
+						}else {
+							monster.remove();
+						}
+					}
+				}, obj.monster_time -10 )
+			}
+
+
+			//创建怪兽
+			function createMonster() {
+				 var m = document.createElement("i");
+				 m.style.animationDuration = obj.monster_time/1000 +"s"
+				 return m ; 
+			}
+
+			_self.config = obj;
+			_self.init();
+
+			
+		}
+
+		var plane = new Plane();
+
+		document.getElementsByTagName("button")[0].onclick = function(){
+			this.className = plane.config.identi;
+			plane.start();
+		}
+		
+	</script>
+</body>
+</html>
