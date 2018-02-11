@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>贪吃蛇</title>
+    <script type="text/javascript" src="index.js" ></script>
+    <style type="text/css">
+		/*CSS Reset*/
+		body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td,header,hgroup,nav,section,article,aside,footer,figure,figcaption,menu,button{margin:0;padding:0}body{font-family:"Helvetica Neue",Helvetica,STHeiTi,sans-serif;line-height:1.5;font-size:16px;color:#666;background-color:#f0eff5;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;outline:0;word-wrap:break-word;word-break:break-all;-webkit-touch-callout:none;touch-callout:none}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}table{border-collapse:collapse;border-spacing:0}caption,th{text-align:left}fieldset,img{border:0;max-width:100%}li{list-style:none}ins{text-decoration:none}del{text-decoration:line-through}input,button,textarea,select,optgroup,option{font-family:inherit;font-size:inherit;font-style:inherit;font-weight:inherit;outline:0;-webkit-appearance:none}button{-webkit-appearance:none;border:0;background:0}a{-webkit-touch-callout:none;text-decoration:none;cursor:pointer}a:active{background-color:#e5e6e7}:focus{outline:0;-webkit-tap-highlight-color:transparent}em,i{font-style:normal}
+    </style>
+
+    <style>
+    	
+    	.section {
+    		width: 800px;
+    		height: 600px;
+    		background: #000;
+    		position: absolute;
+    		top: 0;
+    		right: 0;
+    		bottom: 0;
+    		left: 0;
+    		margin: auto;
+    	}
+
+    	.section .snake {
+			position: absolute;
+			margin: 1px;
+			width: 18px;
+			height: 18px;
+			background: #999;
+
+    	}
+    	.section .snake0 {
+
+    		background: #fff;
+    	}
+
+    	.section i.snake {
+			
+			background: #fff;
+			animation: ani 1s linear infinite;
+    	}
+
+    	@keyframes ani {
+    		0%   { opacity: 1; }
+    		20%  { opacity: 0.8; }
+    		40%  { opacity: 0.6; }
+    		60%  { opacity: 0.4; }
+    		80%  { opacity: 0.6; }
+    		100% { opacity: 0.8; }
+    	}
+
+    	.section span {
+    		position: absolute;
+    		right: 20px;
+    		top: 10px;
+    		font-size: 36px;
+    		line-height: 36px;
+    		font-weight: bold;
+    		color: #fff;
+    		z-index: 1;
+
+    	}
+
+    	.section .point:before {
+    		content: '得分：';
+    		font-size: 12px;
+    	}
+    	.botton_setion {
+    		position: absolute;
+		 	margin: auto;
+		 	z-index: 2;
+		 	left: 0;
+		 	right: 0;
+		 	bottom: 0;
+		 	top: 0;
+		 	width: 120px;
+		 	height: 140px;
+    	}
+		.section button {
+		 	width: 120px;
+		 	height: 40px;
+		 	line-height: 40px;
+		 	border-radius: 2px;
+		 	color: #fff;
+			cursor: pointer;
+			font-size: 16px;
+		 	background: #444;
+		 	margin-bottom: 10px;
+		}
+
+		.section .option {
+			font-size:24px;
+			right: auto;
+			left: 20px;
+			cursor: pointer;
+			display: none;
+		}
+
+    </style>
+</head>
+<body>
+ 	<section id='SnakeMap' class='section' >
+		<span class='point' id='Point' >0</span>
+		<section id='ButtonBox' class='botton_setion' >
+			<button id='Button'>普通模式</button>
+			<button>一般模式</button>
+			<button>极限模式</button>
+		</section>
+		<span class='option' id='Option' >暂停</span>
+ 	</section>
+
+
+	<script type="text/javascript">
+
+		function _$(n){
+			return document.getElementById(n);
+		}
+		function _C(n){
+			return document.createElement(n);
+		}
+		function _T(t,d){
+			return (d || document).getElementsByTagName(t);
+		}
+
+		function Snake(){
+			this.widht = 800; // 长
+			this.height =600; // 宽
+			this.unit = 20;   // 高
+			this.xpos = this.widht/this.unit;  // 最大x坐标
+			this.ypos = this.height/this.unit; // 最大y坐标
+			this.SnakeMapDom = _$('SnakeMap'); // 地图dom
+			this.PointDom  = _$('Point');      // 得分dom
+			this.OptionDom  = _$('Option');    // 开始/暂停
+			this.stop = false;                 // 是否暂停
+			this.point = 0 ;                   // 得分
+			this.ButtonBoxDom = _$('ButtonBox');//开始DOM
+			this.ButtonsDom = _T('button');    // 开始游戏dom
+			// 初始蛇
+			this.snake = [[3,this.ypos/2],[2,this.ypos/2],[1,this.ypos/2]];  
+			this.dot = [];                     // 初始豆豆
+ 			this.hasDot = false;               // 是否吃到豆豆
+			this.length = this.snake.length;   // 蛇长度 
+			this.direction  = 39;              // 方向  38上  40下  37左  39右 
+			this.stoper = 0 ;                  // 暂停参数
+			this.speed = 300;                  // 速度
+			this.isKeyDown = false;            // 是否可以方向键
+ 
+			var _self = this;
+			function init(){
+				//开始游戏
+				for(var i = 0 ; i < _self.ButtonsDom.length ;i ++){
+					(function(_speed){
+						_self.ButtonsDom[i].onclick = function(){
+							_self.speed = _self.speed  - _speed;
+							_self.ButtonBoxDom.style.display = 'none';
+							_self.OptionDom.style.display = 'block';
+							start();
+						}
+					}(i * 100 * 1.2))
+				}
+			}
+
+			function start() {
+				initEvent();
+				creataSnake();
+				createDot();
+				move();
+			}
+
+			// 事件
+			function initEvent(){
+				//方向键
+				document.addEventListener("keydown", function(e){
+
+					if(e.keyCode >=37 && e.keyCode <=40) {
+
+						if(_self.isKeyDown || _self.stop) return ;
+						
+						if( _self.direction === 37 && e.keyCode===39) return;
+						if( _self.direction === 38 && e.keyCode===40) return;
+						if( _self.direction === 39 && e.keyCode===37) return;
+						if( _self.direction === 40 && e.keyCode===38) return;
+						_self.direction = e.keyCode;
+						_self.isKeyDown = true;
+					
+					}
+
+				});
+				// 开始暂停
+				_self.OptionDom.onclick = function(){
+					if(!_self.stop){
+						_self.stop = true;
+						this.innerHTML = '开始';
+						clearTimeout(_self.stoper);
+					}else {
+						_self.stop = false;
+						this.innerHTML = '暂停';
+						move();
+					}
+				}
+			}
+
+			// 渲染蛇
+			function creataSnake(){
+
+				var _temp = {}, snakes = _T('div',_self.SnakeMapDom);//找到之前蛇
+
+
+				// 是吃到豆豆 吃到后删除豆豆 创建新豆豆
+				if(_self.hasDot){
+					_self.SnakeMapDom.removeChild(_$('dot'));
+					createDot();
+					_self.hasDot = false;
+				}
+			
+
+				//找到之前的蛇 删掉 //从数组后面开始删
+				if(snakes && snakes.length ){
+					var  l = snakes.length;
+					for (var i = l -1; i >= 0  ; i--) {
+						_self.SnakeMapDom.removeChild(snakes[i]);
+					}
+				}
+
+				// 创建蛇
+				for (var i = 0; i < _self.snake.length; i++) {
+					_temp = _C('div');
+					_temp.style.left = _self.snake[i][0] * _self.unit + "px";
+					_temp.style.top = _self.snake[i][1] * _self.unit + "px";
+					_temp.setAttribute('class','snake');
+
+					if(i===0){
+						_temp.setAttribute('class','snake snake0');
+					}
+					_self.SnakeMapDom.appendChild(_temp);
+				}
+
+				 _self.isKeyDown = false;
+			}
+
+
+			// 创建豆豆
+			function createDot(){
+				var dot =  _C('i');
+				dot.style.left = getX();
+				dot.style.top = getY();
+				dot.setAttribute('id','dot');
+				dot.setAttribute('class','snake');
+				_self.SnakeMapDom.appendChild(dot);
+
+			}
+
+			// 随机豆豆x坐标
+			function getX(){
+				_self.dot[0] = ~~(Math.random() * _self.xpos);
+				return _self.dot[0] *  _self.unit + 'px';
+			}
+
+			// 随机豆豆y坐标
+			function getY(){
+				_self.dot[1] = ~~(Math.random() * _self.ypos);
+ 				return _self.dot[1]  *  _self.unit + 'px';
+			}
+
+
+
+			// 蛇移动
+			function move(){
+
+				// 设置新的蛇数组
+			 	var _snake = [] , _l = _self.snake.length ,is_fail = false;
+
+				_self.stoper = setTimeout(() => {
+
+					// 判断方向 设置新的蛇头位置
+					switch(_self.direction){
+						case 37: // 左
+							_snake.push([ (~~_self.snake[0][0]) - 1 ,(~~_self.snake[0][1]) + 0 ]);
+							break;
+						case 38: // 上
+							_snake.push([ (~~_self.snake[0][0]) + 0 ,(~~_self.snake[0][1]) - 1 ]);
+							break;
+						case 39: // 右
+							_snake.push([ (~~_self.snake[0][0]) + 1 ,(~~_self.snake[0][1]) + 0 ]);
+							break;
+						case 40: // 下
+							_snake.push([ (~~_self.snake[0][0]) + 0 ,(~~_self.snake[0][1]) + 1 ]);
+							break;
+					}
+
+					// 判断是挂啦
+					// 撞墙
+					if(_snake[0][0] < 0 || _snake[0][1] < 0 || _snake[0][0] > _self.xpos - 1 || _snake[0][1] > _self.ypos - 1  ) {
+						fail('壁咚！');
+						return ;
+					}
+
+					// 其他位置往前一个数组位置移一位
+ 					for (var i = 0; i < _l - 1; i++) {
+ 						// 咬到自己
+ 						if(_self.snake[i][0] === _snake[0][0]  && _self.snake[i][1] === _snake[0][1]){
+							fail('自杀！');
+ 							return ;
+ 						}
+ 						_snake.push(_self.snake[i]);
+ 					}
+
+
+ 					// 判断蛇头是否吃到豆豆
+ 					if(_self.dot[0] === _snake[0][0]  && _self.dot[1] === _snake[0][1]){
+ 						_self.hasDot = true;
+ 						if(_self.speed > 30 ){
+ 							_self.speed -= 10;
+ 						}
+ 						_self.PointDom.innerHTML = ++ _self.point;
+ 						_snake.push(_self.dot);
+ 					}	
+ 					
+ 					_self.snake = _snake;
+ 					// 根据数组创建新的蛇
+ 					creataSnake();
+					move();
+				}, _self.speed);
+			}
+
+			// 失败
+			function fail(msg) {
+				alert(msg + '\r\n得分：' + ~~_self.point );
+				clearTimeout(_self.stoper);
+				location.reload();
+			}
+
+			
+			init();
+		}
+
+		new Snake();
+		 
+		
+	</script>
+</body>
+</html>
